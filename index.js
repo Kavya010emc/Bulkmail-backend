@@ -7,7 +7,7 @@ app.use(express.json());
 
 // ✅ FIXING CORS ERROR COMPLETELY
 app.use(cors({
-  origin: "http://localhost:5174",  // ✅ Allow your frontend URL
+  origin: "https://bulkmail-kavya-1se8v0orp-kavyas-projects-fffd4e21.vercel.app/",  // ✅ Allow your frontend URL
   methods: ["POST", "GET"],
   credentials: true
 }));
