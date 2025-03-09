@@ -4,8 +4,13 @@ const nodemailer = require("nodemailer");
 
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+
+// ✅ Allow requests from your frontend URL
+const corsOptions = {
+  origin: "https://bulkmail-kavya-htkbmzu4s-kavyas-projects-fffd4e21.vercel.app",
+  credentials: true
+};
+app.use(cors(corsOptions));
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -13,10 +18,6 @@ const transporter = nodemailer.createTransport({
     user: "skavyabba@gmail.com",
     pass: "lzbc layz efpk gwpm"
   }
-});
-
-app.get("/", (req, res) => {
-  res.send("App is running on port 3000...");
 });
 
 app.post("/mail", async (req, res) => {
@@ -31,13 +32,12 @@ app.post("/mail", async (req, res) => {
         text: msg
       });
     }
-    res.status(200).send("✅ Emails Sent Successfully");
+    res.status(200).send(true);
   } catch (error) {
-    console.error("❌ Failed to send emails:", error);
-    res.status(500).send("❌ Failed to send emails");
+    res.status(500).send(false);
   }
 });
 
 app.listen(3000, () => {
-  console.log("✅ App started on port 3000");
+  console.log("✅ Backend running on port 3000");
 });
