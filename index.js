@@ -10,6 +10,7 @@ var corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// ✅ Nodemailer Transporter Setup
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -18,27 +19,38 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-app.post("/sendmail", function (req, res) {
-  const { email, msg } = req.body;
+app.post("/sendmail", async (req, res) => {
+  const { emails, msg } = req.body;
+  let successCount = 0;
+  let failureCount = 0;
+  let failedEmails = [];
 
-  const mailOptions = {
-    from: "skavyabba@gmail.com",
-    to: email,
-    subject: "Bulk Email from BulkMail App",
-    text: msg
-  };
+  for (let email of emails) {
+    const mailOptions = {
+      from: "skavyabba@gmail.com",
+      to: email,
+      subject: "Bulk Email from BulkMail App",
+      text: msg
+    };
 
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-      res.status(500).send({ status: "Failed", error: error.message });
-    } else {
-      console.log("Email sent: " + info.response);
-      res.status(200).send({ status: "Success", info: info.response });
+    try {
+      await transporter.sendMail(mailOptions);
+      successCount++;
+    } catch (error) {
+      failureCount++;
+      failedEmails.push(email);
     }
+  }
+
+  res.status(200).send({
+    status: "Completed",
+    total: emails.length,
+    success: successCount,
+    failed: failureCount,
+    failedEmails
   });
 });
 
-app.listen(3000, function () {
-  console.log("✅ Server started");
+app.listen(3000, () => {
+  console.log("✅ Server started at http://localhost:3000");
 });
