@@ -6,14 +6,26 @@ const app = express();
 app.use(express.json());
 
 // ✅ FIXING CORS ERROR COMPLETELY
-app.use(cors({
-  origin: ["https://bulkmail-kavya-htkbmzu4s-kavyas-projects-fffd4e21.vercel.app"],
-  methods: ["POST", "GET"],
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+var corsOptions = {
+  origin: ["https://bulkmail-kavya-htkbmzu4s-kavyas-projects-fffd4e21.vercel.app"]
+};
 
-app.options("*", cors()); // ✅ Handle preflight requests
+app.use(cors(corsOptions));
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://bulkmail-kavya-htkbmzu4s-kavyas-projects-fffd4e21.vercel.app");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+app.options('*', (req, res) => {
+  res.header("Access-Control-Allow-Origin", "https://bulkmail-kavya-htkbmzu4s-kavyas-projects-fffd4e21.vercel.app");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.send();
+});
+
+app.use(express.json());
 
 // ✅ Nodemailer Transporter Setup
 const transporter = nodemailer.createTransport({
