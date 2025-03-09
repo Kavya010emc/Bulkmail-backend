@@ -4,7 +4,7 @@ const app = express();
 app.use(express.json());
 
 app.post("/send-mail", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://bulkmail-kavya-1se8v.vercel.app");
+  res.setHeader("Access-Control-Allow-Origin", "https://bulkmail-kavya-htkbmzu4s-kavyas-projects-fffd4e21.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   
