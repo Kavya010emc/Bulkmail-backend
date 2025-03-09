@@ -36,21 +36,23 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// ✅ POST Route To Send Email
+// ✅ POST Route To Send Emails to Multiple Users
 app.post("/sendmail", function (req, res) {
-  const msg = req.body.msg; // ✅ Get the message from frontend
+  const { email, msg } = req.body; // ✅ Get email & message from frontend
 
-  transporter.sendMail({
+  const mailOptions = {
     from: "skavyabba@gmail.com",
-    to: "skavyabba@gmail.com",
+    to: email, // ✅ Now sending to dynamic emails
     subject: "Message from Bulk Mail App",
     text: msg,
-  }, function (error, info) {
+  };
+
+  transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);
       res.status(500).send("❌ Error Sending Email");
     } else {
-      console.log(info);
+      console.log("Email sent: " + info.response);
       res.status(200).send("✅ Email Sent Successfully");
     }
   });
