@@ -5,7 +5,7 @@ const app = express();
 
 // ✅ Allow requests from your frontend URL
 app.use(cors({
-  origin: "https://bulkmail-kavya-1se8v.vercel.app",
+  origin: "https://bulkmail-kavya.vercel.app",
   credentials: true
 }));
 
