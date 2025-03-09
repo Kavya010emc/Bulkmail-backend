@@ -1,22 +1,21 @@
 const express = require("express");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
+require('dotenv').config();
 
 const app = express();
 app.use(express.json());
 
-// ✅ Allow requests from your frontend URL
-const corsOptions = {
-  origin: "https://bulkmail-kavya-htkbmzu4s-kavyas-projects-fffd4e21.vercel.app",
-  credentials: true
-};
-app.use(cors(corsOptions));
+// ✅ Use your environment variable for CORS
+app.use(cors({
+  origin: process.env.ACCESS_CONTROL_ALLOW_ORIGIN
+}));
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "skavyabba@gmail.com",
-    pass: "lzbc layz efpk gwpm"
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
@@ -26,7 +25,7 @@ app.post("/mail", async (req, res) => {
   try {
     for (let i = 0; i < emailList.length; i++) {
       await transporter.sendMail({
-        from: "skavyabba@gmail.com",
+        from: process.env.EMAIL_USER,
         to: emailList[i],
         subject: sub,
         text: msg
