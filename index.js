@@ -6,7 +6,6 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
-// ✅ Use your environment variable for CORS
 app.use(cors({
   origin: process.env.ACCESS_CONTROL_ALLOW_ORIGIN
 }));
@@ -21,7 +20,7 @@ const transporter = nodemailer.createTransport({
 
 app.post("/mail", async (req, res) => {
   const { msg, sub, emailList } = req.body;
-  
+
   try {
     for (let i = 0; i < emailList.length; i++) {
       await transporter.sendMail({
@@ -31,9 +30,10 @@ app.post("/mail", async (req, res) => {
         text: msg
       });
     }
-    res.status(200).send(true);
+    res.status(200).json({ success: true, message: "✅ Emails sent successfully!" });
   } catch (error) {
-    res.status(500).send(false);
+    console.error("❌ Email Error:", error);
+    res.status(500).json({ success: false, message: "❌ Failed to send emails.", error });
   }
 });
 
