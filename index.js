@@ -1,15 +1,25 @@
 const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer")
-require('dotenv').config();
+const nodemailer = require("nodemailer");
+const mongoose = require("mongoose");
+require("dotenv").config();
 
 const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: process.env.ACCESS_CONTROL_ALLOW_ORIGIN
+  origin: process.env.ACCESS_CONTROL_ALLOW_ORIGIN || "http://localhost:5173",
 }));
 
+// ✅ Connect to MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/passkey")
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch(err => console.error("❌ Failed to connect to MongoDB", err));
+
+// ✅ Define Credential Model
+const Credential = mongoose.model("Credential", {}, "bulkmail");
+
+// ✅ Send Single Email
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -22,10 +32,10 @@ app.post("/mail", async (req, res) => {
   const { msg, sub, emailList } = req.body;
 
   try {
-    for (let i = 0; i < emailList.length; i++) {
+    for (const email of emailList) {
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
-        to: emailList[i],
+        to: email,
         subject: sub,
         text: msg
       });
@@ -37,68 +47,40 @@ app.post("/mail", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("✅ Backend running on port 3000");
-});
-
-const mongoose = require("mongoose")
-const app = express();
-app.use(express.json());
-app.use(cors({
-    origin: "http://localhost:5173"
-}));
-
-
-
-mongoose.connect("mongodb://127.0.0.1:27017/passkey")
-.then(() => {
-    console.log("✅ Connected to MongoDB database");
-}).catch((err) => {
-    console.log("❌ Failed to connect to MongoDB", err);
-});
-
-
-//creating model
-const credential = mongoose.model("credential", {}, "bulkmail")
-
-// ✅ Send Bulk Emails
+// ✅ Send Bulk Emails (from MongoDB Credentials)
 app.post("/sendmail", async (req, res) => {
-    const { msg, emailList } = req.body;
+  const { msg, emailList } = req.body;
 
-    credential.find().then(function (data) {
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: data[0].toJSON().user,
-                pass: data[0].toJSON().pass,
-            },
-        });
+  try {
+    const credentials = await Credential.find();
+    if (!credentials.length) {
+      return res.status(500).json({ message: "❌ No email credentials found." });
+    }
 
-        new Promise(async function (resolve, reject) {
-            try {
-                let successCount = 0;
-                for (let i = 0; i < emailList.length; i++) {
-                    await transporter.sendMail({
-                        from: "skavyabba@gmail.com",
-                        to: emailList[i],
-                        subject: "Bulk Mail from App",
-                        text: msg
-                    });
-                    successCount++;
-                }
-                res.status(200).json({ successCount });
-            } catch (error) {
-                console.log(error);
-                res.status(500).send("Failed to send emails");
-            }
-        })
+    const { user, pass } = credentials[0].toJSON();
+    const bulkTransporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user, pass }
+    });
 
-    }).catch(function (error) {
-        console.log(error)
-    })
+    let successCount = 0;
+    for (const email of emailList) {
+      await bulkTransporter.sendMail({
+        from: user,
+        to: email,
+        subject: "Bulk Mail from App",
+        text: msg
+      });
+      successCount++;
+    }
 
+    res.status(200).json({ success: true, successCount, message: `✅ Sent ${successCount} emails.` });
+  } catch (error) {
+    console.error("❌ Bulk Email Error:", error);
+    res.status(500).json({ success: false, message: "❌ Failed to send bulk emails.", error });
+  }
 });
 
 app.listen(5000, () => {
-    console.log("Server started on port 5000...");
-})
+  console.log("✅ Server started on port 5000...");
+});
